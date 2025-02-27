@@ -1,71 +1,94 @@
-// src/App.js
-import React, { useState, useEffect } from "react";
-import Profile from "./components/Profile";
-import Activities from "./components/Activities";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import './App.css';
 
-const clientId = process.env.REACT_APP_STRAVA_CLIENT_ID;
-const clientSecret = process.env.REACT_APP_STRAVA_CLIENT_SECRET;
-const redirectUri = process.env.REACT_APP_STRAVA_REDIRECT_URI;
-
-const App = () => {
-    const [accessToken, setAccessToken] = useState(null);
+const Profile = ({ accessToken }) => {
+    const [profile, setProfile] = useState(null);
 
     useEffect(() => {
-        // 🔥 기존 Access Token 초기화 (앱이 로드될 때마다 초기화)
-        localStorage.removeItem("strava_access_token");
-
-        const storedToken = localStorage.getItem("strava_access_token");
-        const urlParams = new URLSearchParams(window.location.search);
-        const authorizationCode = urlParams.get("code");
-
-        console.log("Stored access token:", storedToken);
-        console.log("Authorization code from URL:", authorizationCode);
-
-        if (!storedToken && authorizationCode) {
-            // 🔐 Strava Access Token 요청
-            fetch("https://www.strava.com/oauth/token", {
-                method: "POST",
+        if (accessToken) {
+            axios.get('https://www.strava.com/api/v3/athlete', {
                 headers: {
-                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify({
-                    client_id: clientId,
-                    client_secret: clientSecret,
-                    code: authorizationCode,
-                    grant_type: "authorization_code",
-                }),
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log("Access token fetched:", data.access_token);
-                    setAccessToken(data.access_token);
-                    localStorage.setItem("strava_access_token", data.access_token);
-                    window.history.replaceState({}, document.title, "/"); // URL에서 인증 코드 제거
+                .then((response) => {
+                    setProfile(response.data);
                 })
                 .catch((error) => {
-                    console.error("Error fetching access token:", error);
+                    console.error('Error fetching profile:', error);
                 });
-        } else if (storedToken) {
-            setAccessToken(storedToken);
         }
-    }, []);
+    }, [accessToken]);
 
-    const handleLogin = () => {
-        // 🌐 Strava OAuth 인증 강제 (approval_prompt=force)
-        window.location = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=read,activity:read_all`;
-    };
+    if (!profile) {
+        return <p>Loading...</p>;
+    }
 
     return (
-        <div>
-            <h1>Strava Profile</h1>
-            {!accessToken ? (
-                <button onClick={handleLogin}>Connect with Strava</button>
-            ) : (
-                <>
-                    <Profile accessToken={accessToken} />
-                    <Activities accessToken={accessToken} />
-                </>
-            )}
+        <div className="profile">
+            <img src={profile.profile} alt="Profile" className="profile-img" />
+            <h2 className="profile-username">@{profile.username}</h2>
+        </div>
+    );
+};
+
+const Activities = ({ accessToken }) => {
+    const [activities, setActivities] = useState([]);
+
+    useEffect(() => {
+        if (accessToken) {
+            axios.get('https://www.strava.com/api/v3/athlete/activities', {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            })
+                .then((response) => {
+                    setActivities(response.data);
+                })
+                .catch((error) => {
+                    console.error('Error fetching activities:', error);
+                });
+        }
+    }, [accessToken]);
+
+    return (
+        <div className="activities">
+            <h2 className="activities-title">Recent Activities</h2>
+            <ul className="activities-list">
+                {activities.map((activity) => (
+                    <li key={activity.id} className="activity-item">
+                        <strong>{activity.name}</strong> - {(activity.distance / 1000).toFixed(2)} km
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+const App = () => {
+    const [accessToken, setAccessToken] = useState(localStorage.getItem('strava_access_token') || null);
+
+    const handleLogout = () => {
+        localStorage.removeItem('strava_access_token');
+        setAccessToken(null);
+        window.location.href = '/';
+    };
+
+    if (!accessToken) {
+        const clientId = process.env.REACT_APP_STRAVA_CLIENT_ID;
+        const redirectUri = process.env.REACT_APP_STRAVA_REDIRECT_URI;
+        const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=read,activity:read_all`;
+
+        window.location.href = authUrl;
+        return null;
+    }
+
+    return (
+        <div className="app-container">
+            <Profile accessToken={accessToken} />
+            <Activities accessToken={accessToken} />
+            <button className="logout-button" onClick={handleLogout}>Logout</button>
         </div>
     );
 };
