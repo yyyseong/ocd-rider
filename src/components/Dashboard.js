@@ -1,53 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import Cropper from 'react-easy-crop';
-import { getCroppedImg } from '../utils/cropImage';
-import { db, storage } from '../firebase';
-import { doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import React from 'react';
+import BikeCard from './BikeCard';
+import AddBikeButton from './AddBikeButton';
 
-// 자전거 카드 컴포넌트
-const BikeCard = ({ bike, handleDelete }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedName, setEditedName] = useState(bike.name);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [bikeImage, setBikeImage] = useState(bike.image);
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-    const [isCropping, setIsCropping] = useState(false);
-
-    const handleEditClick = () => {
-        setIsEditing(!isEditing);
-        if (!isEditing) {
-            updateBikeData();
-        }
-    };
-
-    const updateBikeData = async () => {
-        try {
-            const bikeRef = doc(db, 'bikes', bike.id);
-            await updateDoc(bikeRef, { name: editedName, image: bikeImage });
-            console.log('Bike data updated!');
-        } catch (error) {
-            console.error('Error updating bike data:', error);
-        }
-    };
-
+// Dashboard 컴포넌트
+const Dashboard = ({ bikes, handleAddBike, handleDeleteBike }) => {
     return (
-        <div className="flex flex-col items-center mt-8">
-            <div className="card aspect-[5/4] relative rounded-2xl bg-gray-200">
-                <img src={bikeImage} alt="Bike" className="w-full h-full object-cover rounded-2xl" />
-            </div>
-            <div className="bike-name-box bg-orange-500 text-white font-bold w-full text-center py-2 mt-2 rounded-2xl">
-                <input
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    className="w-full bg-transparent text-center text-white font-bold"
-                />
+        <div className="p-4 flex flex-col bg-gray-100 min-h-screen pt-20">
+            <div className="flex">
+                <div className="flex flex-col items-start w-full">
+                    <h2 className="text-gray-600 font-bold mb-4 mt-10">Dashboard</h2>
+                    <div className="flex gap-6 mt-6">
+                        {/* 자전거 카드 목록 렌더링 */}
+                        {bikes.length > 0 ? (
+                            bikes.map((bike) => (
+                                <BikeCard
+                                    key={bike.id}
+                                    bike={bike}
+                                    handleDelete={handleDeleteBike}
+                                />
+                            ))
+                        ) : (
+                            <p className="text-gray-500">등록된 자전거가 없습니다. 자전거를 추가해주세요!</p>
+                        )}
+
+                        {/* 자전거 추가 버튼 */}
+                        <AddBikeButton onAdd={handleAddBike} />
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
 
-export default BikeCard;
+export default Dashboard;
