@@ -69,6 +69,31 @@ const Activities = ({ accessToken }) => {
 const App = () => {
     const [accessToken, setAccessToken] = useState(localStorage.getItem('strava_access_token') || null);
 
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const authorizationCode = urlParams.get('code');
+
+        if (!accessToken && authorizationCode) {
+            console.log('Authorization code from URL:', authorizationCode);
+
+            axios.post('https://www.strava.com/oauth/token', {
+                client_id: process.env.REACT_APP_STRAVA_CLIENT_ID,
+                client_secret: process.env.REACT_APP_STRAVA_CLIENT_SECRET,
+                code: authorizationCode,
+                grant_type: 'authorization_code',
+            })
+                .then((response) => {
+                    console.log('Access token received:', response.data.access_token);
+                    localStorage.setItem('strava_access_token', response.data.access_token);
+                    setAccessToken(response.data.access_token);
+                    window.history.replaceState({}, document.title, "/"); // URL에서 인증 코드를 제거
+                })
+                .catch((error) => {
+                    console.error('Error fetching access token:', error);
+                });
+        }
+    }, [accessToken]);
+
     const handleLogout = () => {
         localStorage.removeItem('strava_access_token');
         setAccessToken(null);
@@ -80,8 +105,12 @@ const App = () => {
         const redirectUri = process.env.REACT_APP_STRAVA_REDIRECT_URI;
         const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=read,activity:read_all`;
 
-        window.location.href = authUrl;
-        return null;
+        return (
+            <div>
+                <p>Redirecting to Strava for authentication...</p>
+                {window.location.replace(authUrl)}
+            </div>
+        );
     }
 
     return (
