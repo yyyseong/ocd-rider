@@ -6,7 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 const BikeCard = ({ bike, handleDelete }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedName, setEditedName] = useState(bike.name);
-    const [bikeImage, setBikeImage] = useState(bike.image);
+    const [bikeImage] = useState(bike.image);
 
     // ✨ 편집 모드 전환 및 데이터 업데이트
     const handleEditClick = () => {
