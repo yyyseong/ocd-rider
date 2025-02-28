@@ -31,6 +31,10 @@ const BikeCard = ({ bike, handleDelete }) => {
         <div className="flex flex-col items-center mt-8">
             <div className="card aspect-[5/4] relative rounded-2xl bg-gray-200">
                 <img src={bikeImage} alt="Bike" className="w-full h-full object-cover rounded-2xl" />
+                {/* 🟠 편집 버튼 */}
+                <button className="edit-button bg-orange-500 text-white" onClick={handleEditClick}>
+                    {isEditing ? 'Done' : 'Edit'}
+                </button>
             </div>
             <div className="bike-name-box bg-orange-500 text-white font-bold w-full text-center py-2 mt-2 rounded-2xl">
                 <input
