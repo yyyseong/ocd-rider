@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
+import { db } from './firebase';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 const Profile = ({ accessToken }) => {
     const [profile, setProfile] = useState(null);
@@ -66,6 +68,53 @@ const Activities = ({ accessToken }) => {
     );
 };
 
+const BicycleManager = ({ stravaUserId }) => {
+    const [bicycleName, setBicycleName] = useState('');
+    const [bicycles, setBicycles] = useState([]);
+
+    useEffect(() => {
+        const fetchBicycles = async () => {
+            const querySnapshot = await getDocs(collection(db, 'bicycle'));
+            const fetchedBicycles = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setBicycles(fetchedBicycles);
+        };
+        fetchBicycles();
+    }, []);
+
+    const handleAddBicycle = async () => {
+        try {
+            await addDoc(collection(db, 'bicycle'), {
+                bicycleName,
+                userId: stravaUserId,
+            });
+            setBicycleName('');
+            alert('Bicycle added successfully!');
+        } catch (error) {
+            console.error('Error adding bicycle:', error);
+        }
+    };
+
+    return (
+        <div className="bicycle-manager">
+            <h2>Add a Bicycle</h2>
+            <input
+                type="text"
+                placeholder="Bicycle Name"
+                value={bicycleName}
+                onChange={(e) => setBicycleName(e.target.value)}
+            />
+            <button onClick={handleAddBicycle}>Add Bicycle</button>
+
+            <h3>Your Bicycles</h3>
+            <ul>
+                {bicycles.map((bike) => (
+                    <li key={bike.id}>{bike.bicycleName}</li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
 const App = () => {
     const [accessToken, setAccessToken] = useState(localStorage.getItem('strava_access_token') || null);
 
@@ -74,33 +123,6 @@ const App = () => {
         setAccessToken(null);
         window.location.href = '/';
     };
-
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const storedToken = localStorage.getItem('strava_access_token');
-
-        if (!storedToken && code) {
-            const clientId = process.env.REACT_APP_STRAVA_CLIENT_ID;
-            const clientSecret = process.env.REACT_APP_STRAVA_CLIENT_SECRET;
-            const redirectUri = process.env.REACT_APP_STRAVA_REDIRECT_URI;
-
-            axios.post('https://www.strava.com/oauth/token', {
-                client_id: clientId,
-                client_secret: clientSecret,
-                code,
-                grant_type: 'authorization_code',
-                redirect_uri: redirectUri,
-            }).then((response) => {
-                const token = response.data.access_token;
-                setAccessToken(token);
-                localStorage.setItem('strava_access_token', token);
-                window.history.replaceState({}, document.title, '/');
-            }).catch((error) => {
-                console.error('Error exchanging token:', error);
-            });
-        }
-    }, []);
 
     if (!accessToken) {
         const clientId = process.env.REACT_APP_STRAVA_CLIENT_ID;
@@ -115,6 +137,7 @@ const App = () => {
         <div className="app-container">
             <Profile accessToken={accessToken} />
             <Activities accessToken={accessToken} />
+            <BicycleManager stravaUserId="strava_user_id" />
             <button className="logout-button" onClick={handleLogout}>Logout</button>
         </div>
     );
