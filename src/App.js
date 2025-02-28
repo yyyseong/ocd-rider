@@ -22,10 +22,10 @@ const Header = ({ profile, handleLogout }) => {
 };
 
 // 대시보드 컴포넌트
-const Dashboard = ({ profile, activities }) => {
+const Dashboard = ({ profile }) => {
     return (
         <div className="dashboard p-4 flex">
-            <div className="w-1/4 bg-gray-100 p-4">
+            <div className="w-1/4 bg-gray-100 p-4 h-full">
                 <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
                 <ul>
                     <li className="mb-2">My Bike</li>
@@ -33,14 +33,14 @@ const Dashboard = ({ profile, activities }) => {
                     <li className="mb-2">Activities</li>
                 </ul>
             </div>
-            <div className="w-2/4 p-4 bg-white shadow rounded">
+            <div className="w-2/4 p-4 bg-white shadow rounded h-full">
                 <h2 className="text-2xl font-semibold mb-4">My Bike</h2>
-                <div className="bike-image-container bg-gray-200 w-full h-64 flex items-center justify-center">
+                <div className="bike-image-container bg-gray-200 w-full h-64 flex items-center justify-center relative">
                     <span className="text-gray-500">Bike Image Placeholder</span>
                     <button className="edit-button absolute bottom-2 right-2 bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
                 </div>
             </div>
-            <div className="w-1/4 p-4 bg-gray-50 flex flex-col items-center justify-center">
+            <div className="w-1/4 p-4 bg-gray-50 flex flex-col items-center justify-center h-full">
                 <button className="bg-green-500 text-white px-4 py-2 rounded">Add New Bike</button>
             </div>
         </div>
@@ -51,7 +51,6 @@ const Dashboard = ({ profile, activities }) => {
 const App = () => {
     const [accessToken, setAccessToken] = useState(localStorage.getItem('strava_access_token') || null);
     const [profile, setProfile] = useState(null);
-    const [activities, setActivities] = useState([]);
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -115,7 +114,7 @@ const App = () => {
         <>
             <Header profile={profile} handleLogout={handleLogout} />
             <Routes>
-                <Route path="/dashboard" element={<Dashboard profile={profile} activities={activities} />} />
+                <Route path="/dashboard" element={<Dashboard profile={profile} />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </>
