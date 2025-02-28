@@ -7,12 +7,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 const Header = ({ profile, handleLogout }) => {
     return (
         <div className="header flex justify-between items-center p-4 bg-gray-900 text-white">
-            <div className="logo text-2xl font-bold">OCD Rider</div>
+            <div className="logo text-3xl font-bold">OCD Rider</div>
             <div className="flex items-center">
                 {profile && (
                     <div className="flex items-center">
-                        <img src={profile.profile} alt="Profile" className="w-10 h-10 rounded-full mr-2" />
-                        <span className="text-lg">@{profile.username}</span>
+                        <img src={profile.profile} alt="Profile" className="w-12 h-12 rounded-full mr-2" />
+                        <span className="text-xl">@{profile.username}</span>
                     </div>
                 )}
                 <button className="ml-4 bg-red-500 hover:bg-red-600 px-3 py-1 rounded" onClick={handleLogout}>Logout</button>
@@ -24,15 +24,25 @@ const Header = ({ profile, handleLogout }) => {
 // 대시보드 컴포넌트
 const Dashboard = ({ profile, activities }) => {
     return (
-        <div className="dashboard p-4">
-            <h2 className="text-2xl font-semibold mb-4">Recent Activities</h2>
-            <ul className="activities-list">
-                {activities.map((activity) => (
-                    <li key={activity.id} className="activity-item">
-                        <strong>{activity.name}</strong> - {(activity.distance / 1000).toFixed(2)} km
-                    </li>
-                ))}
-            </ul>
+        <div className="dashboard p-4 flex">
+            <div className="w-1/4 bg-gray-100 p-4">
+                <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
+                <ul>
+                    <li className="mb-2">My Bike</li>
+                    <li className="mb-2">My Component</li>
+                    <li className="mb-2">Activities</li>
+                </ul>
+            </div>
+            <div className="w-2/4 p-4 bg-white shadow rounded">
+                <h2 className="text-2xl font-semibold mb-4">My Bike</h2>
+                <div className="bike-image-container bg-gray-200 w-full h-64 flex items-center justify-center">
+                    <span className="text-gray-500">Bike Image Placeholder</span>
+                    <button className="edit-button absolute bottom-2 right-2 bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
+                </div>
+            </div>
+            <div className="w-1/4 p-4 bg-gray-50 flex flex-col items-center justify-center">
+                <button className="bg-green-500 text-white px-4 py-2 rounded">Add New Bike</button>
+            </div>
         </div>
     );
 };
@@ -44,7 +54,6 @@ const App = () => {
     const [activities, setActivities] = useState([]);
     const navigate = useNavigate();
 
-    // 로그아웃 처리
     const handleLogout = () => {
         localStorage.removeItem('strava_access_token');
         setAccessToken(null);
@@ -95,16 +104,6 @@ const App = () => {
             }).catch((error) => {
                 console.error('Error fetching profile:', error);
             });
-
-            axios.get('https://www.strava.com/api/v3/athlete/activities', {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            }).then((response) => {
-                setActivities(response.data);
-            }).catch((error) => {
-                console.error('Error fetching activities:', error);
-            });
         }
     }, [accessToken]);
 
@@ -123,7 +122,6 @@ const App = () => {
     );
 };
 
-// React Router 적용
 const AppWrapper = () => (
     <Router>
         <App />
