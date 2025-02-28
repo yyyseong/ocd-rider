@@ -1,4 +1,4 @@
-// src/Header.js
+// src/components/Header.js
 import React from 'react';
 
 const Header = ({ profile, handleLogout }) => {
@@ -12,7 +12,9 @@ const Header = ({ profile, handleLogout }) => {
                         <span className="text-lg">@{profile.username}</span>
                     </div>
                 )}
-                <button className="ml-4 bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-white" onClick={handleLogout}>Logout</button>
+                <button className="ml-4 bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-white" onClick={handleLogout}>
+                    Logout
+                </button>
             </div>
         </div>
     );
