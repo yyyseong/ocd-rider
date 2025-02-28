@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import './App.css';
+import './index.css';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
-// 헤더 컴포넌트
+// 헤더 컴포넌트: 상단의 로고, 사용자 정보 및 로그아웃 버튼을 포함합니다.
 const Header = ({ profile, handleLogout }) => {
     return (
-        <div className="header flex justify-between items-center p-4 bg-gray-900 text-white fixed w-full top-0 z-50">
-            <div className="logo text-3xl font-bold">OCD Rider</div>
+        <div className="header fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-white border-b border-gray-200 z-10">
+            <div className="logo text-2xl font-bold">OCD Rider</div>
             <div className="flex items-center">
                 {profile && (
                     <div className="flex items-center">
-                        <img src={profile.profile} alt="Profile" className="w-12 h-12 rounded-full mr-2" />
-                        <span className="text-xl">@{profile.username}</span>
+                        <img src={profile.profile} alt="Profile" className="w-10 h-10 rounded-full mr-2" />
+                        <span className="text-lg">@{profile.username}</span>
                     </div>
                 )}
-                <button className="ml-4 bg-red-500 hover:bg-red-600 px-3 py-1 rounded" onClick={handleLogout}>Logout</button>
+                <button className="ml-4 bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-white" onClick={handleLogout}>Logout</button>
             </div>
         </div>
     );
@@ -24,30 +24,35 @@ const Header = ({ profile, handleLogout }) => {
 // 대시보드 컴포넌트
 const Dashboard = ({ profile }) => {
     return (
-        <div className="flex pt-20">
-            <div className="w-1/4 bg-gray-100 p-4 h-screen fixed top-16">
-                <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
-                <ul>
-                    <li className="mb-2">My Bike</li>
-                    <li className="mb-2">My Component</li>
-                    <li className="mb-2">Activities</li>
-                </ul>
-            </div>
-            <div className="w-2/4 p-4 ml-1/4 bg-white shadow rounded min-h-screen">
-                <h2 className="text-2xl font-semibold mb-4">My Bike</h2>
-                <div className="bike-image-container bg-gray-200 w-full h-64 flex items-center justify-center relative">
-                    <span className="text-gray-500">Bike Image Placeholder</span>
-                    <button className="edit-button absolute bottom-2 right-2 bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
+        <div className="p-4 flex flex-col bg-gray-100 min-h-screen pt-20">
+            <div className="flex">
+                <div className="menu-container bg-white shadow-md p-4 rounded mr-6 mt-20">
+                    <ul className="space-y-2">
+                        <li className="menu-item text-orange-500 font-bold">Dashboard</li>
+                        <li className="menu-item hover:text-orange-500 pl-4">My Bike</li>
+                        <li className="menu-item hover:text-orange-500 pl-4">My Component</li>
+                        <li className="menu-item hover:text-orange-500 pl-4">Activities</li>
+                    </ul>
                 </div>
-            </div>
-            <div className="w-1/4 p-4 bg-gray-50 flex flex-col items-center justify-center min-h-screen">
-                <button className="bg-green-500 text-white px-4 py-2 rounded">Add New Bike</button>
+                <div className="flex flex-col items-start">
+                    <h2 className="text-gray-600 font-bold mb-4">Dashboard</h2>
+                    <div className="flex gap-6">
+                        <div className="flex flex-col items-center">
+                            <div className="card aspect-[5/4] relative">
+                                <button className="edit-button">Edit</button>
+                            </div>
+                            <div className="bike-name-box bg-orange-500 text-white font-bold w-full text-center py-2 mt-2">Bike Name</div>
+                        </div>
+                        <div className="add-new-bike bg-orange-500">
+                            <span className="text-white text-6xl font-bold">+</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
 
-// 메인 앱 컴포넌트
 const App = () => {
     const [accessToken, setAccessToken] = useState(localStorage.getItem('strava_access_token') || null);
     const [profile, setProfile] = useState(null);
@@ -70,27 +75,33 @@ const App = () => {
                     redirect_uri: process.env.REACT_APP_STRAVA_REDIRECT_URI,
                 });
                 const { access_token } = response.data;
+                console.log('Access Token:', access_token); // ✅ 액세스 토큰 로그 확인
                 localStorage.setItem('strava_access_token', access_token);
                 setAccessToken(access_token);
                 navigate('/dashboard');
             } catch (error) {
-                console.error('Error fetching access token:', error);
+                console.error('Error fetching access token:', error.response?.data || error.message);
             }
         };
-
+    
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-
+    
+        console.log('Authorization Code:', code); // ✅ 인증 코드 로그 확인
+    
         if (!accessToken && code) {
             fetchAccessToken(code);
         } else if (!accessToken) {
             const clientId = process.env.REACT_APP_STRAVA_CLIENT_ID;
             const redirectUri = process.env.REACT_APP_STRAVA_REDIRECT_URI;
-            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=read,activity:read_all`;
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=read,activity:read_all`;
+            console.log('Auth URL:', authUrl); // ✅ 인증 URL 로그 확인
             window.location.href = authUrl;
         }
-
+    
     }, [accessToken, navigate]);
+    
+    
 
     useEffect(() => {
         if (accessToken) {
@@ -101,7 +112,7 @@ const App = () => {
             }).then((response) => {
                 setProfile(response.data);
             }).catch((error) => {
-                console.error('Error fetching profile:', error);
+                console.error('Error fetching profile:', error.response?.data || error.message);
             });
         }
     }, [accessToken]);

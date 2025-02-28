@@ -79,3 +79,15 @@ button {
   padding: 5px 10px;
   border-radius: 4px;
 }
+
+/* Ensure no text overlap and maintain layout */
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Hide placeholder text */
+.card .placeholder-text {
+  display: none;
+}
