@@ -28,7 +28,7 @@ const App = () => {
                     const token = response.data.access_token;
                     setAccessToken(token);
                     localStorage.setItem('strava_access_token', token);
-                    window.history.replaceState({}, document.title, "/"); // URL에서 코드 제거
+                    window.history.replaceState({}, document.title, "/"); // URL에서 code 제거
                 })
                 .catch((error) => {
                     console.error('Error exchanging authorization code:', error);
